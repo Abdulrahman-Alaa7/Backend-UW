@@ -84,3 +84,39 @@ export class UpdatePasswordResponse {
   @Field(() => ErrorType, { nullable: true })
   error?: ErrorType;
 }
+
+@ObjectType()
+export class UpdateUserProfilePicResponse {
+  @Field(() => User)
+  user: User | unknown;
+
+  @Field(() => ErrorType, { nullable: true })
+  error?: ErrorType;
+}
+
+@ObjectType()
+export class GetUserByIdResponse {
+  @Field(() => User)
+  user: User | unknown;
+
+  @Field(() => ErrorType, { nullable: true })
+  error?: ErrorType;
+}
+
+@ObjectType()
+export class UserResponse {
+  @Field(() => User)
+  user: User | unknown;
+
+  @Field(() => ErrorType, { nullable: true })
+  error?: ErrorType;
+}
+
+@ObjectType()
+export class MessageResponse {
+  @Field()
+  message: string;
+
+  @Field(() => ErrorType, { nullable: true })
+  error?: ErrorType;
+}

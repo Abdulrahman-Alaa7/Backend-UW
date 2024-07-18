@@ -3,12 +3,16 @@ import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   ActivationResponse,
   ForgotPasswordResponse,
+  GetUserByIdResponse,
   LoginResponse,
   LogoutResposne,
+  MessageResponse,
   RegisterResponse,
   ResetPasswordResponse,
   UpdatePasswordResponse,
   UpdateProfileUserResponse,
+  UpdateUserProfilePicResponse,
+  UserResponse,
 } from './types/user.types';
 import {
   ActivationDto,
@@ -17,11 +21,15 @@ import {
   ResetPasswordDto,
   UpdatePasswordDto,
   UpdateProfileUserDto,
+  UpdateUserByIdForCreatorsDto,
+  UpdateUserProfilePicDto,
 } from './dto/user.dto';
 import { Response } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
+import { Roles } from './decorator/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
 
 @Resolver('User')
 // @UseFilters
@@ -90,6 +98,9 @@ export class UsersResolver {
   }
 
   @Query(() => [User])
+  @UseGuards(AuthGuard)
+  @Roles(['Manager'])
+  @UseGuards(RolesGuard)
   async getUsers() {
     return this.userService.getUsers();
   }
@@ -121,5 +132,53 @@ export class UsersResolver {
       context.req,
       updateProfileUserDto,
     );
+  }
+
+  @Mutation(() => UpdateUserProfilePicResponse)
+  @UseGuards(AuthGuard)
+  async updateUserProfilePic(
+    @Args('updateUserProfilePicDto')
+    updateUserProfilePicDto: UpdateUserProfilePicDto,
+    @Context() context: { req: Request },
+  ): Promise<UpdateUserProfilePicResponse> {
+    return await this.userService.updateUserProfilePic(
+      context.req,
+      updateUserProfilePicDto,
+    );
+  }
+
+  @Query(() => GetUserByIdResponse)
+  @UseGuards(AuthGuard)
+  @Roles(['Manager'])
+  @UseGuards(RolesGuard)
+  async getUserById(
+    @Args('userId')
+    userId: string,
+  ): Promise<GetUserByIdResponse> {
+    return await this.userService.getUserById(userId);
+  }
+
+  @Mutation(() => UserResponse)
+  @UseGuards(AuthGuard)
+  @Roles(['Manager'])
+  @UseGuards(RolesGuard)
+  async updateUserByIdForCreators(
+    @Args('updateUserByIdForCreatorsDto')
+    updateUserByIdForCreatorsDto: UpdateUserByIdForCreatorsDto,
+  ): Promise<UserResponse> {
+    return await this.userService.updateUserByIdForCreators(
+      updateUserByIdForCreatorsDto,
+    );
+  }
+
+  @Mutation(() => MessageResponse)
+  @UseGuards(AuthGuard)
+  @Roles(['Manager'])
+  @UseGuards(RolesGuard)
+  async deleteUserById(
+    @Args('userId')
+    userId: string,
+  ): Promise<MessageResponse> {
+    return await this.userService.deleteUserById(userId);
   }
 }

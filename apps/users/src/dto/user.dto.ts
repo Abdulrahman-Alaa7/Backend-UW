@@ -16,6 +16,20 @@ enum Gender {
   org = 'org',
 }
 
+enum Status {
+  active = 'active',
+  hold = 'hold',
+}
+
+enum Role {
+  Manager = 'Manager',
+  University = 'University',
+  Faculty = 'Faculty',
+  Department = 'Department',
+  Professor = 'Professor',
+  Student = 'Student',
+  User = 'User',
+}
 @InputType()
 export class RegisterDto {
   @Field()
@@ -96,8 +110,8 @@ export class UpdateProfileUserDto {
   @IsString({ message: 'Name must need to be one string.' })
   name: string;
 
-  @Field(() => GraphQLUpload, { nullable: true })
-  image?: Promise<FileUpload>;
+  // @Field(() => GraphQLUpload, { nullable: true })
+  // image?: Promise<FileUpload>;
 
   @Field({ nullable: true })
   gender?: Gender;
@@ -116,6 +130,12 @@ export class UpdateProfileUserDto {
 }
 
 @InputType()
+export class UpdateUserProfilePicDto {
+  @Field(() => GraphQLUpload, { nullable: true })
+  image?: Promise<FileUpload>;
+}
+
+@InputType()
 export class UpdatePasswordDto {
   @Field()
   @IsNotEmpty({ message: 'Current password is required.' })
@@ -126,4 +146,22 @@ export class UpdatePasswordDto {
   @IsNotEmpty({ message: 'New password is required.' })
   @IsString({ message: 'New password must need to be one string.' })
   newPassword: string;
+}
+
+@InputType()
+export class UpdateUserByIdForCreatorsDto {
+  @Field()
+  @IsNotEmpty({ message: 'User id is required.' })
+  @IsString({ message: 'User id password must need to be string.' })
+  userId: string;
+
+  @Field()
+  @IsNotEmpty({ message: 'Role is required.' })
+  @IsString({ message: 'Role password must need to be string.' })
+  role: Role;
+
+  @Field()
+  @IsNotEmpty({ message: 'Status is required.' })
+  @IsString({ message: 'Status password must need to be string.' })
+  status: Status;
 }

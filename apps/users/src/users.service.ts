@@ -9,6 +9,8 @@ import {
   ResetPasswordDto,
   UpdatePasswordDto,
   UpdateProfileUserDto,
+  UpdateUserByIdForCreatorsDto,
+  UpdateUserProfilePicDto,
 } from './dto/user.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
@@ -20,6 +22,7 @@ import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import { v4 as uuidv4 } from 'uuid';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
+import * as fs from 'fs';
 
 interface UserData {
   name: string;
@@ -303,14 +306,9 @@ export class UsersService {
     req: any,
     updateProfileUserDto: UpdateProfileUserDto,
   ) {
-    const { name, bio, dob, gender, address, phone_number, image } =
+    const { name, bio, dob, gender, address, phone_number } =
       updateProfileUserDto;
     const userId = req.user.id;
-
-    let imageUrl;
-    if (image) {
-      imageUrl = await this.storeImageAndGetURL(image);
-    }
 
     const user = await this.prisma.user.update({
       where: {
@@ -321,9 +319,60 @@ export class UsersService {
         bio,
         dob,
         gender,
-        image: imageUrl,
         address,
         phone_number,
+      },
+    });
+    return { user };
+  }
+
+  async updateUserProfilePic(
+    req: any,
+    updateUserProfilePicDto: UpdateUserProfilePicDto,
+  ) {
+    const { image } = updateUserProfilePicDto;
+    const userId = req.user.id;
+    const oldImageUrl = req.user?.image;
+
+    let imageUrl;
+    if (image) {
+      if (oldImageUrl) {
+        const imagePath = oldImageUrl.replace(`${process.env.APP_URL}/`, '');
+        const fullImagePath = join(process.cwd(), 'public', imagePath);
+
+        fs.unlink(fullImagePath, (err: any) => {
+          if (err) {
+            // console.error(`Error deleting image: ${err.message}`);
+          } else {
+            // console.log(`Image deleted successfully: ${fullImagePath}`);
+          }
+        });
+      }
+      imageUrl = await this.storeImageAndGetURL(image);
+    } else {
+      if (oldImageUrl) {
+        const imagePath = oldImageUrl.replace(`${process.env.APP_URL}/`, '');
+        const fullImagePath = join(process.cwd(), 'public', imagePath);
+
+        fs.unlink(fullImagePath, (err: any) => {
+          if (err) {
+            // console.error(`Error deleting image: ${err.message}`);
+          } else {
+            // console.log(`Image deleted successfully: ${fullImagePath}`);
+          }
+        });
+        imageUrl = null;
+      } else {
+        imageUrl = null;
+      }
+    }
+
+    const user = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        image: imageUrl,
       },
     });
     return { user };
@@ -333,11 +382,68 @@ export class UsersService {
     const { createReadStream, filename } = await file;
 
     const uniqueFilename = `${uuidv4()}_${filename}`;
-    const imagePath = join(process.cwd(), 'public', uniqueFilename);
-    const imageUrl = `${process.env.APP_URL}/${uniqueFilename}`;
+    const imagePath = join(
+      process.cwd(),
+      'public',
+      'profilePic',
+      uniqueFilename,
+    );
+    const imageUrl = `${process.env.APP_URL}/profilePic/${uniqueFilename}`;
     const readStream = createReadStream();
     readStream.pipe(createWriteStream(imagePath));
 
     return imageUrl; // Return the appropriate URL where the file can be accessed
+  }
+
+  async getUserById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    return { user };
+  }
+
+  async updateUserByIdForCreators(
+    updateUserByIdForCreatorsDto: UpdateUserByIdForCreatorsDto,
+  ) {
+    const { userId, role, status } = updateUserByIdForCreatorsDto;
+
+    const user = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        role,
+        status,
+      },
+    });
+
+    return { user };
+  }
+
+  async deleteUserById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.prisma.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+
+    return { message: `User Deleted Successfully` };
   }
 }

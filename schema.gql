@@ -78,10 +78,31 @@ type UpdatePasswordResponse {
   error: ErrorType
 }
 
+type UpdateUserProfilePicResponse {
+  user: User!
+  error: ErrorType
+}
+
+type GetUserByIdResponse {
+  user: User!
+  error: ErrorType
+}
+
+type UserResponse {
+  user: User!
+  error: ErrorType
+}
+
+type MessageResponse {
+  message: String!
+  error: ErrorType
+}
+
 type Query {
   getLoggedInUser: LoginResponse!
   logOutUser: LogoutResposne!
   getUsers: [User!]!
+  getUserById(userId: String!): GetUserByIdResponse!
 }
 
 type Mutation {
@@ -92,6 +113,9 @@ type Mutation {
   resetPassword(resetPasswordDto: ResetPasswordDto!): ResetPasswordResponse!
   updatePassword(updatePasswordDto: UpdatePasswordDto!): UpdatePasswordResponse!
   updateProfile(updateProfileUserDto: UpdateProfileUserDto!): UpdateProfileUserResponse!
+  updateUserProfilePic(updateUserProfilePicDto: UpdateUserProfilePicDto!): UpdateUserProfilePicResponse!
+  updateUserByIdForCreators(updateUserByIdForCreatorsDto: UpdateUserByIdForCreatorsDto!): UserResponse!
+  deleteUserById(userId: String!): MessageResponse!
 }
 
 input RegisterDto {
@@ -124,7 +148,6 @@ input UpdatePasswordDto {
 
 input UpdateProfileUserDto {
   name: String!
-  image: Upload
   gender: String
   bio: String
   dob: DateTime
@@ -132,5 +155,15 @@ input UpdateProfileUserDto {
   address: String
 }
 
+input UpdateUserProfilePicDto {
+  image: Upload
+}
+
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+input UpdateUserByIdForCreatorsDto {
+  userId: String!
+  role: String!
+  status: String!
+}
